@@ -10,7 +10,6 @@ document.addEventListener("blur", capture.bind(eventQueue));
 
 let prevKeyFrame = {};
 let keyFrame = {};
-let actionFrame = {};
 const remember = function remember(keyFrame, prevKeyFrame) {
   for (const key in keyFrame) {
     if (keyFrame[key]) {
@@ -47,26 +46,26 @@ const key4_to_vec2 = (function key4_to_vec2() {
   const up = [0, 1];
   const dirs = [right, left, up, down];
   return {
-    key4 : [false, false, false, false],
-    vec2 : [0, 0],
-    filter : function filter({ keys, filters }, keyFrame, prevKeyFrame) {
-      for (let i=0; i<this.key4.length; i++){
+    key4: [false, false, false, false],
+    vec2: [0, 0],
+    filter: function filter({ keys, filters }, keyFrame, prevKeyFrame) {
+      for (let i = 0; i < this.key4.length; i++) {
         const key = keys[i];
         const filter = filters[i];
         let action;
         switch (filter) {
-        case "keydown":
-          this.key4[i] = !prevKeyFrame[key] && keyFrame[key];
-          break;
-        case "keyup":
-          this.key4[i] = prevKeyFrame[key] && !keyFrame[key];
-          break;
-        case "key":
-          this.key4[i] = keyFrame[key];
-          break;
-        case "nokey":
-          this.key4[i] = !keyFrame[key];
-          break;
+          case "keydown":
+            this.key4[i] = !prevKeyFrame[key] && keyFrame[key];
+            break;
+          case "keyup":
+            this.key4[i] = prevKeyFrame[key] && !keyFrame[key];
+            break;
+          case "key":
+            this.key4[i] = keyFrame[key];
+            break;
+          case "nokey":
+            this.key4[i] = !keyFrame[key];
+            break;
         }
       }
       this.vec2[0] = (this.key4[0] ? 1 : 0) + (this.key4[1] ? -1 : 0);
@@ -89,7 +88,7 @@ const bindDefn = [
   //   `AFRAME.scenes[0].systems.keyboardFrame.poll( "snapRotateLeft" )`
   //
   // in the console, it returns `true` on the frame that you press `q`,
-  // and false otherwise.
+  // and `false` otherwise.
   //
   {
     action: "snapRotateRight",
@@ -131,16 +130,7 @@ const bindDefn = [
   // TODO: The filter doesn't fully mimick wasd-to-analog2d yet.
 ];
 
-const fillActionFrame = function fillActionFrame(bindDefn, keyFrame, prevKeyFrame, actionFrame) {
-  for (let i = 0; i < bindDefn.length; i++) {
-    const binding = bindDefn[i];
-    fillActionFrameFromBinding(binding, keyFrame, prevKeyFrame, actionFrame);
-    if (debug && actionFrame[binding.action]) {
-      console.log(binding.action);
-    }
-  }
-};
-
+const actionFrame = {};
 const activeActionSets = ["muteToggling", "snapRotating", "screenShareToggling", "moving"];
 const fillActionFrameFromBinding = function fillActionFrameFromBinding(binding, keyFrame, prevKeyFrame, actionFrame) {
   const setIsActive = activeActionSets.indexOf(binding.set) !== -1;
@@ -160,7 +150,7 @@ const fillActionFrameFromBinding = function fillActionFrameFromBinding(binding, 
       action = !keyFrame[binding.key];
       break;
 
-  case "key4_to_vec2":
+    case "key4_to_vec2":
       if (!binding.filterFn) {
         binding.filterFn = key4_to_vec2;
       }
@@ -170,9 +160,18 @@ const fillActionFrameFromBinding = function fillActionFrameFromBinding(binding, 
   actionFrame[binding.action] = action;
 };
 
+const fillActionFrame = function fillActionFrame(bindDefn, keyFrame, prevKeyFrame, actionFrame) {
+  for (let i = 0; i < bindDefn.length; i++) {
+    const binding = bindDefn[i];
+    fillActionFrameFromBinding(binding, keyFrame, prevKeyFrame, actionFrame);
+    if (debug && actionFrame[binding.action]) {
+      console.log(binding.action);
+    }
+  }
+};
+
 AFRAME.registerSystem("keyboardFrame", {
-  init() {
-  },
+  init() {},
 
   tick() {
     prevKeyFrame = {}; // garbage
