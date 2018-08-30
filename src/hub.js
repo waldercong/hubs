@@ -94,7 +94,7 @@ import { addMedia } from "./utils/media-utils";
 import "./systems/personal-space-bubble";
 import "./systems/app-mode";
 import "./systems/exit-on-blur";
-import "./systems/input";
+import "./keyboard-frames";
 
 import "./gltf-component-mappings";
 import { DEFAULT_ENVIRONMENT_URL } from "./assets/environments/environments";
