@@ -29,6 +29,7 @@ AFRAME.registerComponent("character-controller", {
     this.snapRotateRight = this.snapRotateRight.bind(this);
     this.setAngularVelocity = this.setAngularVelocity.bind(this);
     this.handleTeleport = this.handleTeleport.bind(this);
+    this.tick = this.tick.bind(this);
   },
 
   update: function() {
@@ -100,6 +101,18 @@ AFRAME.registerComponent("character-controller", {
     const startScale = new THREE.Vector3();
 
     return function(t, dt) {
+      const keyboardFrame = AFRAME.scenes[0].systems.keyboardFrame;
+      if (keyboardFrame.poll("snapRotateRight")) {
+        this.snapRotateRight();
+      }
+      if (keyboardFrame.poll("snapRotateLeft")) {
+        this.snapRotateLeft();
+      }
+      const axes = keyboardFrame.poll("move");
+      if (axes) {
+        this.accelerationInput.set(axes[0], 0, axes[1]);
+      }
+
       const deltaSeconds = dt / 1000;
       const root = this.el.object3D;
       const pivot = this.data.pivot.object3D;

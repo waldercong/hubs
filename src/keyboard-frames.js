@@ -1,3 +1,5 @@
+let debug = false;
+
 const eventQueue = [];
 const capture = function capture(e) {
   this.push(e);
@@ -48,7 +50,7 @@ const key4_to_vec2 = (function key4_to_vec2() {
     key4 : [false, false, false, false],
     vec2 : [0, 0],
     filter : function filter({ keys, filters }, keyFrame, prevKeyFrame) {
-      for (i=0; i<key4.length; i++){
+      for (let i=0; i<this.key4.length; i++){
         const key = keys[i];
         const filter = filters[i];
         let action;
@@ -133,12 +135,15 @@ const fillActionFrame = function fillActionFrame(bindDefn, keyFrame, prevKeyFram
   for (let i = 0; i < bindDefn.length; i++) {
     const binding = bindDefn[i];
     fillActionFrameFromBinding(binding, keyFrame, prevKeyFrame, actionFrame);
+    if (debug && actionFrame[binding.action]) {
+      console.log(binding.action);
+    }
   }
 };
 
 const activeActionSets = ["muteToggling", "snapRotating", "screenShareToggling", "moving"];
 const fillActionFrameFromBinding = function fillActionFrameFromBinding(binding, keyFrame, prevKeyFrame, actionFrame) {
-  const setIsActive = activeActionSets.indexOf(binding.set) === -1;
+  const setIsActive = activeActionSets.indexOf(binding.set) !== -1;
   if (!setIsActive) return; // leave actionFrame(binding.action) as it is for now.
   let action;
   switch (binding.filter) {
@@ -167,7 +172,6 @@ const fillActionFrameFromBinding = function fillActionFrameFromBinding(binding, 
 
 AFRAME.registerSystem("keyboardFrame", {
   init() {
-    this.debug = 0;
   },
 
   tick() {
@@ -180,6 +184,10 @@ AFRAME.registerSystem("keyboardFrame", {
 
   poll(action) {
     return actionFrame[action];
+  },
+
+  setDebug(d) {
+    debug = d;
   }
 });
 

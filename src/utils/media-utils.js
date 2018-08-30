@@ -52,7 +52,7 @@ export const upload = file => {
 };
 
 let interactableId = 0;
-export const addMedia = (src, contentOrigin, resize = false) => {
+export const addMedia = (src, template, contentOrigin, resize = false) => {
   const scene = AFRAME.scenes[0];
 
   const entity = document.createElement("a-entity");
