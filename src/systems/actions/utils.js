@@ -29,7 +29,8 @@ export function ringbuffer() {
   };
 }
 
-export function applySetChanges(changes, sets) {
+export function changeSets(changes, sets) {
+  return {changes, sets};
 }
 
 export function defaultValue(filter) {

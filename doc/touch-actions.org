@@ -623,6 +623,142 @@ is wrong.
 
 #+BEGIN_EXAMPLE js
 #+END_EXAMPLE
+** input-based branching in the cursor's raycasting 
+As stated, an aim of actions.js is to minimize the amount of 
+"input-based branching" required of app code. Below may serve
+as an example.
+
+This is a snippet of the cursor controller post mquander's pr. 
+https://github.com/mozilla/hubs/pull/562/
+
+Each tick, the cursor controller performs a raycast.
+On all platforms, the requirement for performing the raycast is the 
+the origin and direction for the given ray.
+
+The raycaster's origin and direction are the two vec3 that the user
+provides in order to indicate a kind of "noun" for the next "verb"
+they want to perform, or maybe the "noun" that's about to get "verbed". 
+
+#+BEGIN_EXAMPLE js
+     // This is "input-based branching". 
+     // This existence predicate, the could-possibly-be-null rayObject
+     if (this.data.rayObject) {
+     // is truthy for users on vive,touch,go,daydream
+     // and falsy for and mouse/keyboard.
+       const rayObject = this.data.rayObject.object3D;
+       rayObject.updateMatrixWorld();
+       rayObjectRotation.setFromRotationMatrix(rayObject.matrixWorld);
+       this.raycaster.ray.origin.setFromMatrixPosition(rayObject.matrixWorld);
+       this.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(rayObjectRotation);
+     } else {
+       this.raycaster.setFromCamera(this.mousePos, this.data.camera.components.camera.camera); // camera
+     }
+#+END_EXAMPLE
+The `rayObject` is configurated by the `input-configurator`. 
+#+BEGIN_EXAMPLE html
+<a-scene
+    input-configurator="
+              gazeCursorRayObject: #player-camera;
+              cursorController: #cursor-controller;
+              gazeTeleporter: #gaze-teleport;
+              camera: #player-camera;
+              playerRig: #player-rig;
+              leftController: #player-left-controller;
+              leftControllerRayObject: #player-left-controller;
+              rightController: #player-right-controller;
+              rightControllerRayObject: #player-right-controller;">
+</a-scene>
+#+END_EXAMPLE
+You may recall that the `input-configurator` create the MouseEventHandler
+and the KeyboardEventHandler, but these do not lead to the creation of 
+a `raycastObj`. Hence falsey for people who are only using keyboards, mice, and mouse events.
+
+When people use vive, touch, go, or daydream controllers, they drive the 
+`raycastObj` via the tracked-controls component. 
+
+When users have a touchscreen, trackpad, or mouse, they set the raycast 
+parameters for the upcoming raycast by transforming 2D coordinates from 
+MouseEvents and TouchEvents by the player-camera's transform by three.js, 
+unless it's overwritten somehow in aframe. I don't remember. 
+
+Can we replace the aforementioned branch with the following two lines? If so, 
+do we shuffle the conditional elsewhere, do we remove it, or do we ADD more 
+than ONE in total? [Do we know a method for calculating the branchiness
+of the code paths we write?]
+#+BEGIN_EXAMPLE js
+this.raycaster.ray.origin.set(actions.poll("moving_the_cursor/cursor_origin"));
+this.raycaster.ray.direction.set(actions.poll("moving_the_cursor/cursor_direction"));
+#+END_EXAMPLE
+The input-configurator says the ray will be driven by the transforms of the
+gazeCursorRayObject, leftControllerRayObject, and rightControllerRayObject.
+#+BEGIN_EXAMPLE html
+              gazeCursorRayObject: #player-camera;//,
+              leftControllerRayObject: #player-left-controller;//, and the
+              rightControllerRayObject: #player-right-controller;//.
+#+END_EXAMPLE
+Unlike the `MouseEventsHandler` and the `TouchEventsHandler`, these `RayObjects`
+affect the cursor origin and direction thanks to the tracked-controls component.
+The gazeCursorRayObject (the #player-camera) is driven by... well let's see.
+On mobile it's a combination of your touches on the touchscreen and the orientation
+of your mobile phone. I think it's handled by the three.js if it's a vr camera.
+I wish I could drive it with my hand or the xbox controller's right joystick,
+or I could put it on whatever axis I want. But that might mean I need to 
+animate another (expensive?) aframe entity and add it to the scene graph so that 
+I can set it as another `RayObject` and drive the cursor behavior with it. Hm.
+
+We may want to customize the offset of the origin of the ray from the position 
+given by tracked controls. If we were to draw the device in our avatar's hands,
+we may need to offset its position from the hand differently. We draw our avatar 
+hands at the pos/rot determined by tracked-controls. If the raycaster origin and 
+position are always derived properties of the object3D transform's like these 
+`such-and-suchRayObjects`, then the avatar hand, the cursor line, and the 
+hypothetically-drawn controller objects (with helpful hints about how to do things
+with the controller in your hand) would either need their own object3Ds or would 
+share the same one, and the transforms applied to them would depend on the input 
+devices available to the user. And well, I think it's easy to get this wrong and 
+possibly more expensive because we have one more entity for each.
+
+Perhaps an alternative to these is to 
+1) drive the camera by some explicitly named action about moving the camera
+(a position, rotation, and scale is fine for us for now, although we might like 
+to adjust other parameters of the camera like its draw distance, field of view, 
+or color filters in the future)
+2) drive the left and right avatar_hands, cursor_line_start, and hypothetical 
+helpful controller model by reading explictly named actions about them
+3) write binding files that describe how input devices with satisfy declared 
+interaction needs of the application.
+
+Here's a link to the change https://github.com/mozilla/hubs/pull/562/files and a snippet of rest 
+of function, for reference:
+#+BEGIN_EXAMPLE js
+ performRaycast: (function() {
+   const rayObjectRotation = new THREE.Quaternion();
+   const rawIntersections = [];
+   return function performRaycast(targets) {
+     if (this.data.rayObject) {
+       const rayObject = this.data.rayObject.object3D;
+       rayObject.updateMatrixWorld();
+       rayObjectRotation.setFromRotationMatrix(rayObject.matrixWorld);
+       this.raycaster.ray.origin.setFromMatrixPosition(rayObject.matrixWorld);
+       this.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(rayObjectRotation);
+     } else {
+       this.raycaster.setFromCamera(this.mousePos, this.data.camera.components.camera.camera); // camera
+     }
+     const prevIntersection = this.intersection;
+     rawIntersections.length = 0;
+     this.raycaster.intersectObjects(targets, true, rawIntersections);
+     this.intersection = rawIntersections.find(x => x.object.el);
+     this.emitIntersectionEvents(prevIntersection, this.intersection);
+   };
+ })(),
+#+END_EXAMPLE
+*** can an action frame read from an action frame?
+Yes. Consider an example:
+#+BEGIN_EXAMPLE js
+#+END_EXAMPLE
+** touchscreen bindDefn 
+** pitch yaw rotator
+
 * a disclaimer about voice and purpose
 In any given sentence, I or we might write I or we or we or I.
 I or we don't know what voice to give a sentence when we are or I am

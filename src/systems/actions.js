@@ -1,8 +1,14 @@
-import { ringbuffer, applySetChanges } from "./actions/utils";
-import { keyboard, mouse } from "./actions/devices";
+import { ringbuffer,  concatenate } from "./actions/utils";
+import { keyboard, mouse, playercam } from "./actions/devices";
+import { paths } from "./actions/paths";
+import { bindings } from "./actions/bindDefns";
 const devices = [keyboard, mouse];
+const appdevices = [playercam];
 const history = new ringbuffer();
 const pendingSetChanges = [];
+const bindDefn = concatenate(bindings);
+
+function changeSets(){}
 
 AFRAME.registerSystem("actions", {
   poll(action) {
@@ -45,30 +51,32 @@ AFRAME.registerSystem("actions", {
   },
 
   tick() {
+    // read the previous frame from the history. we'll copy its
+    // sets into the new frame
     const prev = history.read(0);
-    const frame = {
-      sets: [],
-      actions: {},
-      priorities: {}
-    };
-    const {sets, actions, priorities} = frame;
-    for (const idx in prev.sets) {
-      sets.push(prev.sets[idx]);
-    }
-    pendingSetChanges.forEach(sc => {
-      const {set, fn} = sc;
-      const isActive = sets.includes(set);
-      if (!isActive && fn === "activate") {
-        sets.push(set);
-      } else if (isActive && fn === "deactivate") {
-        sets.splice(sets.indexOf(set), 1); // TODO: replace splice
-      }
-    });
-    applySetChanges(pendingSetChanges, frame.sets);
+
+    const sets = [];
+    const actions = {};
+    const priorities = {};
+    const frame = {sets, actions, priorities};
+    changeSets(pendingSetChanges, frame.sets);
     pendingSetChanges.length = 0; // garbage
+
     devices.forEach(device => {
-      device.fillActionFrame(frame);
+      device.tickInputFrame(frame); // Gather user provided state
     });
+    appdevices.forEach(device => {
+      device.tickInputFrame(frame); // Gather app provided state
+    });
+    bindDefn.forEach(binding => {
+      resolveActions(frame);        // Combine user input with app state
+    });
+
     history.write(frame);
+    // The rest of the application runs after this point,
+    // and we expect it to write to appdevices and to
+    // enqueue set changes, so that if it were all in line here,
+    // there would be as many calls to poll as there are
+    // code paths that need an action to change app state in some way
   }
 });
