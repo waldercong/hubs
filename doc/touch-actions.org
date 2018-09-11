@@ -728,6 +728,8 @@ helpful controller model by reading explictly named actions about them
 3) write binding files that describe how input devices with satisfy declared 
 interaction needs of the application.
 
+Here are the app's "action paths" I have in mind: https://github.com/mozilla/hubs/blob/actions/src/systems/actions/paths.js#L77 
+
 Here's a link to the change https://github.com/mozilla/hubs/pull/562/files and a snippet of rest 
 of function, for reference:
 #+BEGIN_EXAMPLE js
