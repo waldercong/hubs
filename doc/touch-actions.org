@@ -729,6 +729,7 @@ helpful controller model by reading explictly named actions about them
 interaction needs of the application.
 
 Here are the app's "action paths" I have in mind: https://github.com/mozilla/hubs/blob/actions/src/systems/actions/paths.js#L77 
+and a table showing which of these actions are currently supported in the app: https://docs.google.com/spreadsheets/d/1VcQ_Duvd-gvLqdebuGo9FjOOrzBsbs-ticNbwEDgwzU/edit#gid=0
 
 Here's a link to the change https://github.com/mozilla/hubs/pull/562/files and a snippet of rest 
 of function, for reference:
