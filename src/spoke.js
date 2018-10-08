@@ -157,23 +157,20 @@ class SpokeLanding extends Component {
                       <FormattedMessage id="spoke.browse_all_versions" />
                     </a>
                   )}
-                  <button className={styles.playButton} onClick={() => this.setState({ playVideo: true })}>
-                    <FormattedMessage id="spoke.play_button" />
-                  </button>
                 </div>
               </div>
-              <div className={styles.heroVideo}>
-                <video playsInline muted loop autoPlay className={styles.previewVideo} id="preview-video">
-                  <source
-                    src="https://assets-prod.reticulum.io/assets/video/home-aee18c619a9005bd4b0d31295670af80.webm"
-                    type="video/webm"
-                  />
-                  <source
-                    src="https://assets-prod.reticulum.io/assets/video/home-5af051d2c531928dbaaf51b9badaabde.mp4"
-                    type="video/mp4"
-                  />
-                </video>
-              </div>
+            </div>
+            <div className={styles.heroVideo}>
+              <video playsInline muted loop autoPlay className={styles.previewVideo} id="preview-video">
+                <source
+                  src="https://assets-prod.reticulum.io/assets/video/home-aee18c619a9005bd4b0d31295670af80.webm"
+                  type="video/webm"
+                />
+                <source
+                  src="https://assets-prod.reticulum.io/assets/video/home-5af051d2c531928dbaaf51b9badaabde.mp4"
+                  type="video/mp4"
+                />
+              </video>
             </div>
           </div>
           <div className={styles.bg} />
