@@ -199,11 +199,11 @@ AFRAME.registerComponent("media-pager", {
     this.onNext = this.onNext.bind(this);
     this.onPrev = this.onPrev.bind(this);
     this.el.addEventListener("image-loaded", async e => {
-      // unfortunately, since we loaded the page image in an img tag inside media-image, we have to make a second
-      // request for the same page to read out the max-content-index header
-      this.maxIndex = await fetchMaxContentIndex(e.detail.src);
       // if this is the first image we ever loaded, set up the UI
       if (this.toolbar == null) {
+        // unfortunately, since we loaded the page image in an img tag inside media-image, we have to make a second
+        // request for the same page to read out the max-content-index header
+        this.maxIndex = await fetchMaxContentIndex(e.detail.src);
         const template = document.getElementById("paging-toolbar");
         this.el.appendChild(document.importNode(template.content, true));
         this.toolbar = this.el.querySelector(".paging-toolbar");
