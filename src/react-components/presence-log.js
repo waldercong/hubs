@@ -7,6 +7,8 @@ import { toArray as toEmojis } from "react-emoji-render";
 import { FormattedMessage } from "react-intl";
 import serializeElement from "../utils/serialize-element";
 
+import { share } from "../utils/share";
+
 const messageCanvas = document.createElement("canvas");
 const presenceLogSpawnedStyle = `background-color: white; color: black; padding: 8px 16px; border-radius: 16px;`;
 const presenceLogPureEmojiStyle = `background-color: transparent; text-align: center;`;
@@ -87,7 +89,9 @@ function ChatMessage(props) {
 
   return (
     <div className={props.className}>
-      {props.maySpawn && <button className={styles.spawnMessage} onClick={handleSpawn} />}
+      {props.maySpawn && (
+        <button className={classNames(styles.iconButton, styles.spawnMessage)} onClick={handleSpawn} />
+      )}
       <div className={multiLine ? styles.messageWrapMulti : styles.messageWrap}>
         <div className={styles.messageSource}>
           <b>{props.name}</b>:
@@ -104,6 +108,37 @@ ChatMessage.propTypes = {
   name: PropTypes.string,
   maySpawn: PropTypes.bool,
   body: PropTypes.string,
+  className: PropTypes.string
+};
+
+function SpawnPhotoMessage({ name, body: { src: url }, className, maySpawn }) {
+  const onShareClicked = share.bind(null, { url, title: "Check out this photo from #hubs" });
+  return (
+    <div className={className}>
+      {maySpawn && <button className={classNames(styles.iconButton, styles.share)} onClick={onShareClicked} />}
+      <div className={styles.mediaBody}>
+        <span>
+          <b>{name}</b>
+        </span>
+        <span>
+          {"took a "}
+          <b>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              photo
+            </a>
+          </b>.
+        </span>
+      </div>
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        <img src={url} />
+      </a>
+    </div>
+  );
+}
+SpawnPhotoMessage.propTypes = {
+  name: PropTypes.string,
+  maySpawn: PropTypes.bool,
+  body: PropTypes.object,
   className: PropTypes.string
 };
 
@@ -164,26 +199,14 @@ export default class PresenceLog extends Component {
           />
         );
       case "spawn": {
-        const { src } = e.body;
         return (
-          <div key={e.key} className={classNames(entryClasses, styles.media)}>
-            <a href={src} target="_blank" rel="noopener noreferrer">
-              <img src={src} />
-            </a>
-            <div className={styles.mediaBody}>
-              <span>
-                <b>{e.name}</b>
-              </span>
-              <span>
-                {"took a "}
-                <b>
-                  <a href={src} target="_blank" rel="noopener noreferrer">
-                    photo
-                  </a>
-                </b>.
-              </span>
-            </div>
-          </div>
+          <SpawnPhotoMessage
+            key={e.key}
+            name={e.name}
+            className={classNames(entryClasses, styles.media)}
+            body={e.body}
+            maySpawn={e.maySpawn}
+          />
         );
       }
     }
